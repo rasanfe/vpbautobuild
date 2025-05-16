@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Project>
+  <Type Name="pb"/>
+  <Application Name="vpbautobuild"/>
+  <Libraries AppEntry="vpbautobuild.pbl">
+    <Library Path="vpbautobuild.pbl"/>
+    <Library Path="topwiz.pbl"/>
+  </Libraries>
+</Project>
