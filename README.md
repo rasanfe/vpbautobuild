@@ -1,96 +1,116 @@
-# VisualPbAutobuild225
+# VisualPbAutobuild225 ⚙️
 
-Release 3 13-02-2023:
+![PowerBuilder](https://img.shields.io/badge/PowerBuilder-2025-orange?style=flat-square&logo=appveyor&logoColor=white)
+![Tipo](https://img.shields.io/badge/herramienta-build%20automation-blue?style=flat-square)
+![Backend](https://img.shields.io/badge/PbAutobuild225-orquestaci%C3%B3n-9cf?style=flat-square)
+![Blog](https://img.shields.io/badge/blog-rsrsystem-FF5722?style=flat-square&logo=blogger&logoColor=white)
 
-- Añadimos w_setup para facilitar la configuración de Archivo setup.ini.
-- Añadimos dw_ini Para manejar el archivo .ini en forma de Datawindow.
-- Añadimos dw_iniparams para DroDownDatawindow de ayuda de selección de Parametros.
-- Añadimos Objeto de Topwiz n_osversion para controlar la versión de la aplicación.
-- Añadimos of_profilestring en objeto n_cst_functions para leer los parámetros de alrchivo setup.ini
- de forma que si no está en el apartado especificado busque en el apartado setup.
-- Elimino wf_version de w_main para controlar la versión de la app en objeto aplicación.
-- Pasamos algunas variables de Instancia de w_main a variables globales para poder utilizarlas en  w_setup.
-- Creo variables de instancia is_JsonFile y is_JsonPath para simplificar parámetros en funciones de  w_main.
-- Contemplo la posibilidad de que No haya configurado un archivo .ini para Guardar Credenciales en Proyectos PowerServer o guardar cadenas de conexión en el resto de proyectos.
+> Una capa visual sobre **`PbAutobuild225.exe`** (el compilador por línea de comandos que viene con PowerBuilder 2025) para automatizar y orquestar el *build* de tus proyectos sin pelearte con parámetros a mano.
 
-Release 2 07-02-2023:
-- Parametrizamos archivos ini de cada proyecto, para no suponer que las credenciales estarán en CloudSetting.ini en proyectos PowerServer o en Setting.ini en el resto de proyectos.
-- Ahora descargamos archivo ini parametrizado de Github, en vez de usar una plantilla en blanco y lo rellenamos dinámicamente de la configuración del archivo setup.ini.
-- Modificamos wf_download_version_control en w_main para extraer la parte de descargar el archivo de github.
-- Creamos of_download_file en n_cst_functions para descargar los archivos de GitHub.
-- Creamos wf_download_inifile en w_main para descargar los archivos ini parametrizados en parámetro iniFile.
-- Ahora la w_build en vez de resetear las plantillas al terminar, elimina los archivos .ini descargados.
+---
 
-Release 1 27-01-2023: 
+## 📋 ¿Qué es esto?
 
-VisualPbAutobuild225 es un programa para ayudar a usar de forma más cómoda el PbAutobuild225.exe incluido con PowerBuilder 2025
-Este ejemplo permite cargar un archivo json de un Proyecto PowerBuilder Cliente/Servidor, PowerClient y PowerServer.
+`PbAutobuild225.exe` es una herramienta estupenda para compilar proyectos PowerBuilder **sin abrir el IDE**, ideal para integraciones continuas y *builds* automatizados. ¿El "pero"? Que se maneja con un archivo **JSON** y un buen puñado de parámetros, y montar todo eso a mano cansa.
 
+**VisualPbAutobuild225** es un programa que pone una **interfaz cómoda por encima**: cargas el JSON de tu proyecto y dejas que la herramienta orqueste la compilación. Soporta los tres sabores de proyecto:
 
-En el archivo de configuración Setup.ini hay que indicar algunos parámetros:
+- **Cliente/Servidor (Nativo)**
+- **PowerClient**
+- **PowerServer**
 
-En apartado [Setup]
+Y de paso se encarga de cosas tediosas: rellenar plantillas de conexión, gestionar credenciales por proyecto, controlar versiones contra GitHub y descargar los `.ini` parametrizados.
 
-json =  		---> Parámetro para Recordar último Json Abierto.
-PbAutobuildPath =  	---> Parámetro para indicar rura instalación PbAutobuild225.exe.
-PBNativePath =  	---> Párametro para indicar ruta de programa compilado en Proyectos Nativos.
+## ✨ Cómo funciona
 
-Para cada proyecto (o json) hay que crear un apartado con los siguientes campos:
+La lógica vive en estas piezas:
 
-Si los proyectos tienen cosas en común en el apartado Setup puedes poner los que quieras que sean comunes para todos los proyectos.
-El programa primero intenta leer del apartado del proyecto y si no mira en el apartado Setup.
+- **`w_main`** → ventana principal: carga el JSON, lee la configuración de `setup.ini` y lanza el *build*.
+- **`w_setup`** → editor visual del archivo `setup.ini` (para no editarlo a pelo).
+- **`dw_ini` / `dw_iniparams`** → manejan el `.ini` como un DataWindow, con DropDownDataWindow de ayuda para elegir parámetros.
+- **`n_cst_functions`** → utilidades: lectura de parámetros (`of_profilestring`, con *fallback* al apartado `[Setup]`), descarga de ficheros desde GitHub (`of_download_file`)…
+- **`n_cst_security`** / **`u_json`** → credenciales y parseo del JSON del proyecto.
+- **`topwiz.pbl`** (`n_osversion`, `n_runandwait`) → control de versión de la app y ejecución de procesos externos esperando su fin.
 
-[projectName.json]
+El flujo: lee el JSON → resuelve parámetros desde `setup.ini` (apartado del proyecto, y si falta, hereda del `[Setup]` común) → prepara plantillas e `.ini` → invoca `PbAutobuild225.exe` → limpia al terminar.
 
-Párametros cadena conexión Base de Datos (Protyectos Nativos / PowerClient)
+## 🛠️ Requisitos
 
-DBMS =  	
-LogPass =  	
-ServerName =  
-LogId =  	
-AutoCommit =  	
-DBParm =
+- **PowerBuilder 2025** con **`PbAutobuild225.exe`** instalado (indica su ruta en `PbAutobuildPath`).
+- **Windows 10/11**.
+- Para control de versiones / credenciales remotas: una cuenta de **GitHub** y su *token* personal.
 
-Párametros Para Indicar Información del archivo ini de cada Proyecto:
+## ▶️ Cómo probarlo
 
-IniFie =  		---> Parámetro para indicar nombre archivo Ini donde Almacenar Pámetros de Conexión (TODOS LOS PROYECTOS)
-IniConnectionKey =  	---> Párametro para inidcar la Sección del Archivo Indicado en Parámetro iniFile donde Guardar la Cadena de Conexión (NATIVOS/POWERCLIENT)
+1. Clona el repositorio (viene **en modo solución**).
+2. Abre `vpbautobuild.pbsln` desde el IDE de PowerBuilder (o lanza `vpbautobuild.exe`).
+3. Configura el `setup.ini` (a mano o con `w_setup`) — ver referencia abajo.
+4. Carga el JSON de tu proyecto y lanza la compilación.
 
-IniUsersKey =  		---> Párametro para inidcar la Sección del Archivo Indicado en Parámetro iniFile donde Guardar las credenciales en Proyectos PowerServer
-IniTokenKey =  		---> Párametro para inidcar la Sección del Archivo Indicado en Parámetro iniFile donde Guardar la URL del Token en Proyectos PowerServer
-UserName =  		---> Parámetro para indicar el Nombre de Usuario en la Plantilla JWT de los proyectos PowerServer
-UserPass =  		---> Parámetro para indicar el Password en la Plantilla JWT de los proyectos PowerServer
+🎥 **Vídeo demostrativo:** <https://youtu.be/pruqqhBwN2Q>
 
-Párametros Para Configurar la Cuenta de Git (necesarios si indicamos version_control='S' o que el proyecto usa una IniFile para guardar credenciales:
+## 🧩 Referencia de configuración (`setup.ini`)
 
-version_control =  	---> Parámetro para inicar si se controlan las Versiones (S/N)
-GitHubProfileName =  	---> Parámetro para indicar el Perfil de GitHub donde está el repositorio
-ProfileVisibility = 	---> Parámetro para indicar si un repositorio es Privado o Público (Private/Public)
-PersonalToken = 	---> Parámetro para almacenar el Token de acceso personal al repositorio. Necesario en repositorios privados.
-GitHubRepository  =  	---> Parámetro para almacenar el nombre del Repositorio de Github
-GitBranch =  		---> Parámetro para almacenar la rama del repositorio de GitHub. Normalmente (main o master)
-Pbl =  			---> Parámetro para almacenar el nombre de la librería pbl donde está el archivo *.srj del Proyecto
-filename =  		---> Parámetro para indicar el nombre del archivo *.srj del Proyecto
+> 💡 Truco: lo que sea común a todos los proyectos ponlo en `[Setup]`. El programa primero busca en el apartado del proyecto y, si no lo encuentra, recurre a `[Setup]`.
 
-Parámetros exclusivos de los Proyectos PowerServer:
+### Apartado `[Setup]`
 
-PowerServerPath =  	---> Parámetro para indicar la ruta física en el servidor donde está guardado el sitio web de PowerServer
+| Parámetro | Para qué |
+|-----------|----------|
+| `json` | Recordar el último JSON abierto. |
+| `PbAutobuildPath` | Ruta de instalación de `PbAutobuild225.exe`. |
+| `PBNativePath` | Ruta del programa compilado en proyectos Nativos. |
 
-Parámetros para indicar reclamos adicionales de autorización en la Plantilla JWT en los proyectos PowerServer:
+### Apartado por proyecto `[projectName.json]`
 
-Scope =  		 
-Name =  		 
-GivenName =  		 
-FamilyName =  		 
-WebSite =  		
-Email =  		
-EmailVerified =  	
+**Cadena de conexión a BD (Nativos / PowerClient):**
+`DBMS`, `LogPass`, `ServerName`, `LogId`, `AutoCommit`, `DBParm`
 
+**Archivo `.ini` de cada proyecto:**
 
-Para estar al tanto de lo que publico puedes seguir mi blog:
+| Parámetro | Para qué |
+|-----------|----------|
+| `IniFile` | Nombre del `.ini` donde guardar los parámetros de conexión (TODOS los proyectos). |
+| `IniConnectionKey` | Sección donde guardar la cadena de conexión (Nativos / PowerClient). |
+| `IniUsersKey` | Sección donde guardar las credenciales (PowerServer). |
+| `IniTokenKey` | Sección donde guardar la URL del Token (PowerServer). |
+| `UserName` / `UserPass` | Usuario y contraseña en la plantilla JWT (PowerServer). |
 
-https://rsrsystem.blogspot.com/
+**Cuenta de Git** (si `version_control='S'` o el proyecto usa `IniFile` para credenciales):
+`version_control`, `GitHubProfileName`, `ProfileVisibility` (`Private`/`Public`), `PersonalToken`, `GitHubRepository`, `GitBranch` (`main`/`master`), `Pbl`, `filename` (nombre del `*.srj`).
 
-Os dejo enlace de un video demostrativo:
+**Exclusivos de PowerServer:**
+`PowerServerPath` (ruta física del sitio web de PowerServer en el servidor).
 
-youtu.be/pruqqhBwN2Q
+**Reclamos adicionales de la plantilla JWT (PowerServer):**
+`Scope`, `Name`, `GivenName`, `FamilyName`, `WebSite`, `Email`, `EmailVerified`
+
+## 🗒️ Historial de versiones
+
+**Release 3 — 13-02-2023**
+- `w_setup` para configurar cómodamente el `setup.ini`.
+- `dw_ini` para manejar el `.ini` como DataWindow y `dw_iniparams` como DropDownDataWindow de ayuda.
+- Objeto `n_osversion` (Topwiz) para controlar la versión de la aplicación.
+- `of_profilestring` en `n_cst_functions`: si un parámetro no está en su apartado, lo busca en `[Setup]`.
+- Variables de instancia compartidas con `w_setup`; nuevas `is_JsonFile`/`is_JsonPath`.
+- Contempla que no haya `.ini` configurado para credenciales (PowerServer) o cadenas de conexión (resto).
+
+**Release 2 — 07-02-2023**
+- Archivos `.ini` parametrizados por proyecto (sin suponer `CloudSetting.ini`/`Setting.ini`).
+- Descarga del `.ini` parametrizado desde GitHub y relleno dinámico desde `setup.ini`.
+- Refactor de descarga (`wf_download_version_control`, `of_download_file`, `wf_download_inifile`).
+- `w_build` ahora elimina los `.ini` descargados al terminar.
+
+**Release 1 — 27-01-2023**
+- Primera versión: carga un JSON de proyecto Cliente/Servidor, PowerClient o PowerServer y facilita el uso de `PbAutobuild225.exe`.
+
+## 🔗 Repo PowerBuilder
+
+Tenéis el ejemplo publicado en modo solución aquí:
+👉 <https://github.com/rasanfe/vpbautobuild>
+
+---
+
+> ¡Nos vemos en el próximo artículo! Y recuerda: en PowerBuilder, los límites solo están en nuestra imaginación. 🚀
+
+📨 **Blog:** <https://rsrsystem.blogspot.com/>
